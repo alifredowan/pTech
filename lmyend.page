@@ -1,0 +1,142 @@
+page lmyend
+	caption Year End Processing
+	section form one
+
+	form one
+		objects xyear,xdateeff,xdateexp, Process, Show, Clear
+		
+		field process
+			event before
+				int i = 0
+				int count=0
+				str clist="xempnum,xgent,xdateeff,xdateexp,zactive"
+				str mysql = "select "+clist+" from lmemp where zid='"+#id+"'  and xdateeff='"+xdateeff+"' and xdateexp='"+xdateexp+"' and xempnum='EIN-000885' order by xempnum"									
+				//print mysql					
+				set count = #sqlfill(mysql)
+				set prvyear = 0+xyear-1
+				set nextyear = 0+xyear+1
+				set nextfdy = "01-01-"+nextyear
+				set newywr=xyear+"-01"+"-01"
+				//print count
+				if count>0
+					while i<count
+						array get(i,clist)	
+						
+						//***************************************Changes for calculating Earn Opening Balance***********************************************\\
+						
+						//set ob_temp = #sql("select xdaysreq from lmtrn where zid = '"+#id+"' and xempnum = '"+xempnum+"' and xdate::text like '"+prvyear+"%' and xtrnleave = 'Opening Balance(+)' and xcodeleave = 'Earn Leave'")
+					
+						//set year_limit_temp = #sql("select xleavedue from lmform where zid='"+#id+"' and xcodeleave='Earn Leave' and xgent='"+xgent+"'")
+						
+						//set xconsumption_temp = 0 + #sql("select sum(xdaysreq) from lmtrn where zid = '"+#id+"' and xempnum = '"+xempnum+"' and xdate::text like '"+prvyear+"%' and xtrnleave = 'Consumption(-)' and xstatusleave like '3-Sanctioned' and xcodeleave = 'Earn Leave'")
+						
+						set prvYearLv=#sql("select (xleavedue+xdaysob-xdaysreq-xdaysapp+xdayscan) from lmstatus where zid='"+#id+"' and xempnum='"+xempnum+"' and xcodeleave='Earn Leave' and xyear='"+xyear+"'")
+			print "select (xleavedue+xdaysob-xdaysreq-xdaysapp+xdayscan) from lmstatus where zid='"+#id+"' and xempnum='"+xempnum+"' and xcodeleave='Earn Leave' and xyear='"+xyear+"'"
+			print prvYearLv
+						set leaveDate=#sql("select xdateexp from premp where zid='"+#id+"' and xempnum='"+xempnum+"'")
+						
+						set joinDate=#sql("select xjoindate from premp where zid='"+#id+"' and xempnum='"+xempnum+"'")
+						//set xcancel_temp = 0 + #sql("select sum(xdaysreq) from lmtrn where zid = '"+#id+"' and xempnum = '"+xempnum+"' and xdate::text like '"+prvyear+"%' and xtrnleave = 'Cancellation(+)' and xstatusleave like '3-Sanctioned' and xcodeleave = 'Earn Leave'")
+
+						//set xremaindays = 0 + ob_temp + year_limit_temp - xconsumption_temp +xcancel_temp		
+						set gtotaldays = #days(xdate)- #days(joinDate)
+						
+						set xremaindays = 0 + prvYearLv
+							
+						set mycflmt  = 0+lmform.xlimitcf(xgent,xcodeleave)						
+						print "Carry Forward Limit: " + mycflmt
+						
+						set totdays=0.0+#days(xdateexp) - #days(xdateeff) +1
+						
+						if gtotaldays < 365
+							set totDays = gtotaldays
+							
+						else if #days(xdate) > 	#days(leaveDate)
+							
+							set totDays = #days(leaveDate) - #days(newywr)
+							
+						end if
+			
+						
+						set empLevel=hrmst.xlevel(xempnum)
+					
+						
+						set newjonDate=#days(joinDate)
+						set startDate=#days(xdateeff)
+						
+						set xwcllv=#sql("select sum(xwcllv) from prmsg where zid='"+#id+"' and xempnum='"+xempnum+"' and xdatepay::text like '"+xyear+"%'")
+						set xwpslv=#sql("select sum(xwpslv) from prmsg where zid='"+#id+"' and xempnum='"+xempnum+"' and xdatepay::text like '"+xyear+"%'")
+						set xwanlv=#sql("select sum(xwanlv) from prmsg where zid='"+#id+"' and xempnum='"+xempnum+"' and xdatepay::text like '"+xyear+"%'")
+						set xwcomplv=#sql("select sum(xwcomplv) from prmsg where zid='"+#id+"' and xempnum='"+xempnum+"' and xdatepay::text like '"+xyear+"%'")
+						set xwptlv=#sql("select sum(xwptlv) from prmsg where zid='"+#id+"' and xempnum='"+xempnum+"' and xdatepay::text like '"+xyear+"%'")
+						set xwsplv=#sql("select sum(xwsplv) from prmsg where zid='"+#id+"' and xempnum='"+xempnum+"' and xdatepay::text like '"+xyear+"%'")
+						set xdayab=#sql("select sum(xdayab) from prmsg where zid='"+#id+"' and xempnum='"+xempnum+"' and xdatepay::text like '"+xyear+"%'")
+						set xratev=#sql("select sum(xratev) from prmsg where zid='"+#id+"' and xempnum='"+xempnum+"' and xdatepay::text like '"+xyear+"%'")
+						set xint01=#sql("select sum(xint01) from prmsg where zid='"+#id+"' and xempnum='"+xempnum+"' and xdatepay::text like '"+xyear+"%'")
+						set xint02=#sql("select sum(xint02) from prmsg where zid='"+#id+"' and xempnum='"+xempnum+"' and xdatepay::text like '"+xyear+"%'")
+						set xfHolPre=#sql("select sum(xfHolPre) from prmsg where zid='"+#id+"' and xempnum='"+xempnum+"' and xdatepay::text like '"+xyear+"%'")
+						set xweckPr=#sql("select sum(xweckPr) from prmsg where zid='"+#id+"' and xempnum='"+xempnum+"' and xdatepay::text like '"+xyear+"%'")
+
+						set totholday=0.0+xfHolPre+xweckPr
+
+						if newjonDate > startDate
+							set xdateeff=newjonDate
+						end if
+
+						set totdays=0.0+#days(xdateexp) - #days(xdateeff) +1
+						set totPrDays=0+totdays-totholday-xwcllv-xwpslv-xwanlv-xwcomplv-xwptlv-xwsplv-xratev-xdayab
+			
+						set totAnualLvDays=0+totPrDays/18
+						
+						set totLvBalance=0.0+xremaindays+totAnualLvDays
+
+						set payableLv=0.0+totAnualLvDays/2
+
+						if xremaindays > mycflmt
+							set mycfday = 0+mycflmt								
+							set xremaindays = 0 + xremaindays - mycfday
+						else
+							set mycfday = 0 + balanceLv
+							set xremaindays = 0 + xremaindays - mycfday						
+						end if
+
+						if empLevel .eq. "Management"
+							
+							set balanceLv=0.0+totAnualLvDays+xremaindays
+							
+							/* set mysql="insert into lmtrn(ztime,zid,xdate,xempnum,xcodeleave,xtrnleave,xsign,xdaysreq,xdateto,xdatefromreq,xdatetoreq,xdateapply,xdateapd,xpurpose,xstatusleave,xrecommendedby,xapprovedby,xcancelreqby,xcancelledby,xnote,xposted,xcarried)"
+							set mysql= mysql+ " values('"+#time+"','"+#id+"','"+nextfdy+"','"+xempnum+"','Earn Leave','Opening Balance(+)','1','"+balanceLv+"',~
+							'"+#d+"','"+#d+"','"+#d+"','"+#d+"','"+#d+"','','3-Sanctioned',~
+							'','','','','**CF By System','','"+mycfday+"')"
+							set insql=#sql(str,mysql) */
+					
+						else if empLevel .eq. "Non Management"	
+							
+							set balanceLv=0.0+payableLv+xremaindays
+							set mygross = 0.0+premp.xdtwotax(xempnum)
+							set dailyAmt = 0.0 +  mygross/30
+							set myencashamt =0.0 + dailyAmt*xremaindays
+							
+							/* set mysql="insert into lmtrn(ztime,zid,xdate,xempnum,xcodeleave,xtrnleave,xsign,xdaysreq,xdateto,xdatefromreq,xdatetoreq,xdateapply,xdateapd,xpurpose,xstatusleave,xrecommendedby,xapprovedby,xcancelreqby,xcancelledby,xnote,xposted,xcarried)"
+							set mysql= mysql+ " values('"+#time+"','"+#id+"','"+nextfdy+"','"+xempnum+"','Earn Leave','Opening Balance(+)','1','"+balanceLv+"',~
+							'"+#d+"','"+#d+"','"+#d+"','"+#d+"','"+#d+"','','3-Sanctioned',~
+							'','','','','**CF By System','','"+mycfday+"')"
+							set insql=#sql(str,mysql) */
+							
+							if xremaindays > 0
+								//set mysql="insert into lmencash(ztime,zid,xdate,xempnum,xcodeleave,xyear,xfdate,xtdate,xamt,xday,xttype)"
+								//set mysql= mysql+ " values('"+#time+"','"+#id+"','"+#d+"','"+xempnum+"','Earn Leave','"+xyear+"','"+xdateeff+"',~
+								//'"+xdateexp+"','"+myencashamt+"','"+xremaindays+"','Payment')"
+								//set insql=#sql(str,mysql)
+							end if 	
+						end if 	
+							
+						set i=0+i+1
+					end while	
+				end if
+			print "<font color=green size=+1><strong>Year End Processing Completed</font>" 
+			end event
+		end field
+	end form
+	
+end page
