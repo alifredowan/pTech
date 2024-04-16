@@ -116,7 +116,7 @@ page lmyend
 							set mygross = 0.0+premp.xdtwotax(xempnum)
 							set dailyAmt = 0.0 +  mygross/30
 							set myencashamt =0.0 + dailyAmt*xremaindays
-							
+							print myencashamt
 							/* set mysql="insert into lmtrn(ztime,zid,xdate,xempnum,xcodeleave,xtrnleave,xsign,xdaysreq,xdateto,xdatefromreq,xdatetoreq,xdateapply,xdateapd,xpurpose,xstatusleave,xrecommendedby,xapprovedby,xcancelreqby,xcancelledby,xnote,xposted,xcarried)"
 							set mysql= mysql+ " values('"+#time+"','"+#id+"','"+nextfdy+"','"+xempnum+"','Earn Leave','Opening Balance(+)','1','"+balanceLv+"',~
 							'"+#d+"','"+#d+"','"+#d+"','"+#d+"','"+#d+"','','3-Sanctioned',~
